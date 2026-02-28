@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cobra — Card Game</title>
+    <meta name="description" content="Cobra - A multiplayer card game. Join a room and play with friends!">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700;800;900&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/style.css">
+</head>
+
+<body>
+    <!-- GridScan Background Canvas -->
+    <canvas id="gridScanCanvas"></canvas>
+
+    <!-- Lobby Screen -->
+    <div id="lobbyScreen" class="screen active">
+        <div class="lobby-container">
+            <div class="logo-wrapper">
+                <h1 class="game-logo">COBRA</h1>
+                <p class="game-subtitle">🐍 The Card Game</p>
+            </div>
+
+            <div class="lobby-panel glass-panel">
+                <div class="tab-bar">
+                    <button class="tab-btn active" data-tab="create" id="tabCreate">Create Room</button>
+                    <button class="tab-btn" data-tab="join" id="tabJoin">Join Room</button>
+                </div>
+
+                <div class="tab-content" id="createTab">
+                    <div class="input-group">
+                        <label for="createName">Your Name</label>
+                        <input type="text" id="createName" placeholder="Enter your name" maxlength="15"
+                            autocomplete="off">
+                    </div>
+                    <button class="btn btn-primary" id="btnCreate">Create Room</button>
+                </div>
+
+                <div class="tab-content hidden" id="joinTab">
+                    <div class="input-group">
+                        <label for="joinName">Your Name</label>
+                        <input type="text" id="joinName" placeholder="Enter your name" maxlength="15"
+                            autocomplete="off">
+                    </div>
+                    <div class="input-group">
+                        <label for="joinCode">Room Code</label>
+                        <input type="text" id="joinCode" placeholder="e.g. ABCD" maxlength="4" autocomplete="off"
+                            class="code-input">
+                    </div>
+                    <button class="btn btn-primary" id="btnJoin">Join Room</button>
+                </div>
+
+                <p class="error-msg hidden" id="lobbyError"></p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Waiting Room -->
+    <div id="waitingScreen" class="screen">
+        <div class="waiting-container">
+            <div class="glass-panel waiting-panel">
+                <h2>Room: <span id="roomCodeDisplay" class="room-code"></span></h2>
+                <p class="share-text">Share this code with friends!</p>
+
+                <div class="players-list" id="playersList"></div>
+
+                <button class="btn btn-primary" id="btnStartGame" style="display:none">Start Game</button>
+                <p class="waiting-text" id="waitingText">Waiting for host to start...</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game Screen -->
+    <div id="gameScreen" class="screen">
+        <!-- Top bar -->
+        <div class="game-top-bar">
+            <div class="game-info">
+                <span class="room-badge" id="gameRoomCode"></span>
+                <span class="round-badge" id="roundBadge"></span>
+            </div>
+            <div class="turn-info" id="turnInfo"></div>
+            <button class="btn btn-cobra" id="btnCobra" style="display:none">🐍 COBRA!</button>
+        </div>
+
+        <!-- Other players area -->
+        <div class="opponents-area" id="opponentsArea"></div>
+
+        <!-- Center area: Deck + Discard -->
+        <div class="center-area">
+            <div class="deck-stack" id="deckArea">
+                <div class="card card-back deck-card" id="deckCard">
+                    <div class="card-back-design">🐍</div>
+                </div>
+                <span class="deck-count" id="deckCount"></span>
+            </div>
+
+            <div class="discard-stack" id="discardArea">
+                <div class="card discard-placeholder" id="discardCard">
+                    <span class="discard-label">Discard</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- Drawn card area -->
+        <div class="drawn-area hidden" id="drawnArea">
+            <p class="drawn-label">You drew:</p>
+            <div class="drawn-card-wrapper" id="drawnCardWrapper"></div>
+            <div class="drawn-actions" id="drawnActions">
+                <button class="btn btn-action" id="btnSwap">Swap with hand</button>
+                <button class="btn btn-action btn-power" id="btnUsePower" style="display:none">Use Power</button>
+                <button class="btn btn-action btn-discard" id="btnDiscard">Discard</button>
+            </div>
+        </div>
+
+        <!-- Your hand -->
+        <div class="your-hand-area">
+            <h3 class="hand-label">Your Hand</h3>
+            <div class="hand-cards" id="yourHand"></div>
+        </div>
+
+        <!-- Action modal (for power selections) -->
+        <div class="modal-overlay hidden" id="modalOverlay">
+            <div class="modal glass-panel" id="actionModal">
+                <h3 id="modalTitle"></h3>
+                <p id="modalDesc"></p>
+                <div id="modalContent"></div>
+                <div class="modal-actions" id="modalActions"></div>
+            </div>
+        </div>
+
+        <!-- Toast notifications -->
+        <div class="toast-container" id="toastContainer"></div>
+
+        <!-- Snap timer bar -->
+        <div class="snap-bar hidden" id="snapBar">
+            <div class="snap-bar-fill" id="snapBarFill"></div>
+            <span class="snap-bar-text">Snap window! Match the discard to drop a card</span>
+        </div>
+
+        <!-- End turn button -->
+        <button class="btn btn-end-turn hidden" id="btnEndTurn">End Turn</button>
+    </div>
+
+    <!-- Round Over Overlay -->
+    <div class="round-over-overlay hidden" id="roundOverScreen">
+        <div class="glass-panel round-over-panel">
+            <h2 class="round-over-title" id="roundOverTitle"></h2>
+            <div class="scoreboard" id="scoreboard"></div>
+            <button class="btn btn-primary" id="btnNewRound">Next Round</button>
+        </div>
+    </div>
+
+    <!-- Initial Peek Overlay -->
+    <div class="peek-overlay hidden" id="peekOverlay">
+        <div class="glass-panel peek-panel">
+            <h2>🔍 Peek at 2 Cards</h2>
+            <p>Select 2 of your 4 cards to look at before the game begins.</p>
+            <div class="peek-cards" id="peekCards"></div>
+            <button class="btn btn-primary" id="btnConfirmPeek" disabled>Confirm Peek</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.socket.io/4.7.4/socket.io.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="js/gridscan.js"></script>
+    <script src="js/cards.js"></script>
+    <script src="js/app.js"></script>
+</body>
+
+</html>
