@@ -12,6 +12,7 @@
     let selectedPeekIndices = [];
     let swapMode = false;
     let doubleDropMode = false;
+    let peekActive = false; // Guard: true while initial peek overlay is showing
     let powerMode = null; // 'peekOwn' | 'peekOther' | 'queenSwap' | 'blackJack' | 'blackJackSwap'
     let powerSelections = {};
     let snapTimer = null;
@@ -182,6 +183,11 @@
 
     // --- Game Rendering ---
     function renderGame(state) {
+        // Don't re-render during initial peek to avoid interfering with card selection
+        if (peekActive) {
+            gameState = state;
+            return;
+        }
         gameState = state;
 
         // Top bar
@@ -359,18 +365,27 @@
 
     // --- Initial Peek ---
     function showInitialPeek() {
+        peekActive = true;
         game.peekOverlay.classList.remove('hidden');
         selectedPeekIndices = [];
         game.btnConfirmPeek.disabled = true;
 
         game.peekCards.innerHTML = '';
         for (let i = 0; i < 4; i++) {
-            const card = createCardBack({
-                selectable: true,
-                onClick: () => togglePeekSelection(i)
-            });
-            card.dataset.index = i;
+            const card = document.createElement('div');
+            card.className = 'card selectable';
             card.id = `peek-card-${i}`;
+            card.dataset.index = i;
+            card.style.cursor = 'pointer';
+            card.style.position = 'relative';
+            card.style.zIndex = '130';
+            card.innerHTML = `<div class="card-back"><div class="card-back-design">🐍</div></div>`;
+
+            card.addEventListener('click', (e) => {
+                e.stopPropagation();
+                togglePeekSelection(i);
+            });
+
             game.peekCards.appendChild(card);
         }
     }
@@ -413,7 +428,10 @@
             showToast('Memorize your cards! They will be hidden soon.', 'info');
 
             setTimeout(() => {
+                peekActive = false;
                 game.peekOverlay.classList.add('hidden');
+                // Re-render with latest state now that peek is done
+                if (gameState) renderGame(gameState);
             }, 3000);
         });
     });
@@ -842,6 +860,7 @@
     });
 
     socket.on('playPhaseStarted', () => {
+        peekActive = false;
         game.peekOverlay.classList.add('hidden');
         showToast('Game on! Draw from the deck on your turn.', 'success');
     });
