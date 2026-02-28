@@ -226,6 +226,11 @@ class Game {
         const power = Deck.hasPower(this.drawnCard);
         if (!power) return { error: 'This card has no power' };
 
+        // Queen swap requires 3+ players (swaps between OTHER players)
+        if (power === 'queenSwap' && this.getConnectedPlayers().length < 3) {
+            return { error: 'Queen swap requires 3+ players. Swap or discard instead.' };
+        }
+
         this.pendingPower = {
             type: power,
             card: this.drawnCard,
