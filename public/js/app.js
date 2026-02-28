@@ -734,11 +734,22 @@
 
     // Cobra call
     game.btnCobra.addEventListener('click', () => {
-        if (confirm('Are you sure you want to call COBRA? 🐍')) {
-            socket.emit('callCobra', {}, (res) => {
-                if (res.error) return showToast(res.error, 'error');
-            });
-        }
+        showModal(
+            '🐍 Call COBRA?',
+            'You believe you have the lowest hand. Everyone gets one final turn after this!',
+            '',
+            [
+                {
+                    text: '🐍 COBRA!', action: () => {
+                        hideModal();
+                        socket.emit('callCobra', {}, (res) => {
+                            if (res.error) return showToast(res.error, 'error');
+                        });
+                    }
+                },
+                { text: 'Cancel', action: () => hideModal() }
+            ]
+        );
     });
 
     // End turn
