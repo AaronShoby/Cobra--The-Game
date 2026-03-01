@@ -69,7 +69,6 @@
         toastContainer: document.getElementById('toastContainer'),
         snapBar: document.getElementById('snapBar'),
         snapBarFill: document.getElementById('snapBarFill'),
-        btnEndTurn: document.getElementById('btnEndTurn'),
         roundOverScreen: document.getElementById('roundOverScreen'),
         roundOverTitle: document.getElementById('roundOverTitle'),
         scoreboard: document.getElementById('scoreboard'),
@@ -232,13 +231,7 @@
             game.drawnArea.classList.add('hidden');
         }
 
-        // End turn button
-        if (state.isYourTurn && !state.drawnCard && !powerMode && state.phase !== 'initial_peek') {
-            // Show end turn if we just discarded (snap window)
-            game.btnEndTurn.classList.toggle('hidden', !state.snapWindow);
-        } else {
-            game.btnEndTurn.classList.add('hidden');
-        }
+        // End turn button removed — turns auto-advance after snap timer
     }
 
     function renderDiscard(card) {
@@ -603,7 +596,10 @@
             powerMode = 'blackJackSwap';
             hideModal();
             showToast("Now select another player's card to swap with", 'info');
-            if (gameState) renderOpponents(gameState);
+            if (gameState) {
+                renderYourHand(gameState);
+                renderOpponents(gameState);
+            }
             return;
         }
 
@@ -752,13 +748,7 @@
         );
     });
 
-    // End turn
-    game.btnEndTurn.addEventListener('click', () => {
-        clearSnapTimer();
-        socket.emit('endTurn', {}, (res) => {
-            if (res.error) return showToast(res.error, 'error');
-        });
-    });
+    // End turn — removed manual button, turns auto-advance via snap timer
 
     // New round
     game.btnNewRound.addEventListener('click', () => {
