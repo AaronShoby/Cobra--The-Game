@@ -270,6 +270,19 @@ io.on('connection', (socket) => {
         if (result.error) return callback(result);
 
         callback(result);
+
+        // Penalty path — wrong card selected
+        if (result.penalty) {
+            io.to(currentRoom).emit('doubleDropPenalty', {
+                playerName: game.getPlayerById(currentPlayerId).name,
+                penaltyCount: result.penaltyCount
+            });
+            broadcastGameState(game);
+            startSnapTimer(game, currentRoom);
+            return;
+        }
+
+        // Success path
         io.to(currentRoom).emit('doubleDrop', {
             playerName: game.getPlayerById(currentPlayerId).name,
             card: result.discardedDrawn

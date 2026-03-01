@@ -257,7 +257,27 @@ class Game {
 
         const handCard = player.hand[handIndex];
         if (handCard.rank !== this.drawnCard.rank) {
-            return { error: 'Cards do not match! Ranks must be the same.' };
+            // PENALTY: wrong card! Player draws 2 extra cards
+            const penaltyCards = [];
+            for (let i = 0; i < 2; i++) {
+                const penaltyCard = this.deck.draw();
+                if (penaltyCard) {
+                    player.hand.push(penaltyCard);
+                    penaltyCards.push(penaltyCard);
+                }
+            }
+            // Discard the drawn card
+            this.deck.discard(this.drawnCard);
+            this.lastDiscard = this.drawnCard;
+            this.drawnCard = null;
+            this.snapWindow = true;
+
+            return {
+                success: false,
+                penalty: true,
+                penaltyCount: penaltyCards.length,
+                discardedDrawn: this.lastDiscard
+            };
         }
 
         const power = Deck.hasPower(this.drawnCard);

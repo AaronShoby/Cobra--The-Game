@@ -505,13 +505,21 @@
             const usePower = !!getCardPowerName(gameState.drawnCard);
             socket.emit('doubleDrop', { handIndex: index, usePower }, (res) => {
                 if (res.error) return showToast(res.error, 'error');
+
                 doubleDropMode = false;
                 game.drawnArea.classList.add('hidden');
-                showToast('🔥 Double Drop! Both cards discarded!', 'success');
-                if (res.pendingPower) {
-                    startPowerMode(res.power);
-                } else {
+
+                if (res.penalty) {
+                    // Wrong card — penalty!
+                    showToast(`❌ Wrong card! Penalty: +${res.penaltyCount} extra cards!`, 'error');
                     showSnapBar();
+                } else if (res.success) {
+                    showToast('🔥 Double Drop! Both cards discarded!', 'success');
+                    if (res.pendingPower) {
+                        startPowerMode(res.power);
+                    } else {
+                        showSnapBar();
+                    }
                 }
             });
             return;
@@ -884,6 +892,10 @@
 
     socket.on('cardsSwapped', (data) => {
         showToast(`${data.playerName} swapped cards between ${data.player1} and ${data.player2}`, 'info');
+    });
+
+    socket.on('doubleDropPenalty', (data) => {
+        showToast(`❌ ${data.playerName} picked the wrong card! +${data.penaltyCount} penalty cards!`, 'error');
     });
 
     socket.on('snapSuccess', (data) => {
