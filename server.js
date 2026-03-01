@@ -112,10 +112,15 @@ io.on('connection', (socket) => {
         // Check if all players have peeked
         const allPeeked = game.players.every(p => p.knownCards.length >= 2);
         if (allPeeked) {
-            game.startPlaying();
-            io.to(currentRoom).emit('playPhaseStarted');
+            // Delay play phase start so the last player can see their peeked cards
+            setTimeout(() => {
+                game.startPlaying();
+                io.to(currentRoom).emit('playPhaseStarted');
+                broadcastGameState(game);
+            }, 4000);
+        } else {
+            broadcastGameState(game);
         }
-        broadcastGameState(game);
     });
 
     socket.on('drawCard', (_, callback) => {
